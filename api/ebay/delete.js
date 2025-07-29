@@ -1,13 +1,13 @@
 import crypto from 'crypto';
 
-const VERIFICATION_TOKEN = 'MySecureVerificationToken123456789'; // use the exact token you gave eBay
+const VERIFICATION_TOKEN = 'MySecureVerificationToken123456789'; // match eBay dashboard
 
 export default function handler(req, res) {
-  const { challenge_code, endpoint, verification_token } = req.query;
+  const { challenge_code } = req.query;
 
-  // Step 1: Handle verification request (GET)
   if (req.method === 'GET' && challenge_code) {
-    const data = challenge_code + VERIFICATION_TOKEN + req.url.split('?')[0];
+    const path = '/api/ebay/delete'; // hardcoded path as required by eBay docs
+    const data = challenge_code + VERIFICATION_TOKEN + path;
     const hash = crypto.createHash('sha256').update(data).digest('hex');
 
     return res.status(200).json({
@@ -15,7 +15,6 @@ export default function handler(req, res) {
     });
   }
 
-  // Step 2: Handle incoming POST data (e.g. actual account deletion events)
   if (req.method === 'POST') {
     let body = '';
 
@@ -26,10 +25,9 @@ export default function handler(req, res) {
     req.on('end', () => {
       try {
         const parsed = JSON.parse(body);
-        console.log('✅ Received deletion event:', parsed);
+        console.log('✅ Received webhook payload:', parsed);
         res.status(200).json({ status: 'OK' });
       } catch (err) {
-        console.error('❌ Invalid JSON:', err);
         res.status(400).json({ error: 'Invalid JSON' });
       }
     });
@@ -37,6 +35,5 @@ export default function handler(req, res) {
     return;
   }
 
-  // Step 3: If it's not GET or POST, reject
   res.status(405).json({ error: 'Method Not Allowed' });
 }
