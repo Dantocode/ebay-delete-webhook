@@ -1,14 +1,12 @@
 export default async function handler(req, res) {
-  const VERIFICATION_TOKEN = 'MySecureVerificationToken123456789';
-
   if (req.method === 'GET') {
-    return res.status(200).send(`GET OK. Send a POST with token: ${VERIFICATION_TOKEN}`);
+    return res.status(200).send('GET OK. Send a POST request for webhook verification.');
   }
 
   if (req.method === 'POST') {
     let body = '';
 
-    // Parse the body manually (Vercel doesn’t do it automatically)
+    // Manually parse body
     await new Promise((resolve, reject) => {
       req.on('data', chunk => {
         body += chunk;
@@ -23,10 +21,17 @@ export default async function handler(req, res) {
       });
     });
 
-    console.log('Received POST:', req.body);
+    console.log('Received POST from eBay:', req.body);
 
-    return res.status(200).json({ verification_token: VERIFICATION_TOKEN });
+    const challenge = req.body.challenge;
+    if (!challenge) {
+      return res.status(400).json({ error: 'Missing challenge parameter' });
+    }
+
+    return res.status(200).json({
+      challengeResponse: challenge
+    });
   }
 
-  res.status(405).end('Method Not Allowed');
+  return res.status(405).end('Method Not Allowed');
 }
