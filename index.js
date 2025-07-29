@@ -1,27 +1,30 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// Middleware to parse JSON
+const VERIFICATION_TOKEN = "MySecureVerificationToken123456789";
+
 app.use(bodyParser.json());
 
-// Replace this with your actual verification token
-const VERIFICATION_TOKEN = 'MySecureVerificationToken123456789';
+// 🔁 Optional: respond to GET requests for browser testing
+app.get('/ebay/delete', (req, res) => {
+  res.send(`POST to this endpoint with the verification token: ${VERIFICATION_TOKEN}`);
+});
 
-// Define the eBay webhook endpoint
+// ✅ Actual eBay webhook POST handler
 app.post('/ebay/delete', (req, res) => {
-  console.log('✅ Received eBay webhook POST request');
-  res.status(200).send(VERIFICATION_TOKEN); // Return token as plain text
+  const token = req.body.verification_token;
+
+  if (token === VERIFICATION_TOKEN) {
+    console.log("✅ Verification token matched");
+    res.status(200).send("Verified");
+  } else {
+    console.warn("❌ Invalid verification token:", token);
+    res.status(403).send("Forbidden");
+  }
 });
 
-// Optional root route to confirm server is running
-app.get('/', (req, res) => {
-  res.send('eBay webhook listener is live ✅');
-});
-
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`✅ Server listening on port ${port}`);
 });
