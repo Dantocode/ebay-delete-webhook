@@ -1,37 +1,25 @@
+import crypto from 'crypto';
 export default async function handler(req, res) {
-  if (req.method === 'GET') {
-    return res.status(200).send('GET OK. Send a POST request for webhook verification.');
+  const VERIFICATION_TOKEN = 'MySecureVerificationToken123456789';
+  const endpoint = `https://${req.headers.host}${req.url.split('?')[0]}`;
+
+  if (req.method === 'GET' && req.query.challenge_code) {
+    const challengeCode = req.query.challenge_code;
+    const hash = crypto.createHash('sha256');
+    hash.update(challengeCode);
+    hash.update(VERIFICATION_TOKEN);
+    hash.update(endpoint);
+    const challengeResponse = hash.digest('hex');
+    return res.status(200)
+      .setHeader('Content-Type', 'application/json')
+      .send(JSON.stringify({ challengeResponse }));
   }
 
   if (req.method === 'POST') {
-    let body = '';
-
-    // Manually parse body
-    await new Promise((resolve, reject) => {
-      req.on('data', chunk => {
-        body += chunk;
-      });
-      req.on('end', () => {
-        try {
-          req.body = JSON.parse(body);
-          resolve();
-        } catch (err) {
-          reject(err);
-        }
-      });
-    });
-
-    console.log('Received POST from eBay:', req.body);
-
-    const challenge = req.body.challenge;
-    if (!challenge) {
-      return res.status(400).json({ error: 'Missing challenge parameter' });
-    }
-
-    return res.status(200).json({
-      challengeResponse: challenge
-    });
+    // Receive actual deletion notification
+    console.log('Received POST webhook:', req.body);
+    return res.status(200).json({}); // basic acknowledgment
   }
 
-  return res.status(405).end('Method Not Allowed');
+  res.status(405).end('Method Not Allowed');
 }
