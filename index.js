@@ -1,18 +1,27 @@
-// pages/api/ebay/delete.js (Vercel expects this to be an API route inside /pages/api)
+const express = require('express');
+const bodyParser = require('body-parser');
 
-export default async function handler(req, res) {
-  const verificationToken = 'MySecureVerificationToken123456789';
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-  if (req.method === 'POST') {
-    try {
-      // eBay expects the raw token in the response body — nothing else
-      res.status(200).send(verificationToken);
-    } catch (error) {
-      console.error('Error handling eBay webhook:', error);
-      res.status(500).send('Internal Server Error');
-    }
-  } else {
-    // eBay requires a POST request
-    res.status(405).send('Method Not Allowed');
-  }
-}
+// Middleware to parse JSON
+app.use(bodyParser.json());
+
+// Replace this with your actual verification token
+const VERIFICATION_TOKEN = 'MySecureVerificationToken123456789';
+
+// Define the eBay webhook endpoint
+app.post('/ebay/delete', (req, res) => {
+  console.log('✅ Received eBay webhook POST request');
+  res.status(200).send(VERIFICATION_TOKEN); // Return token as plain text
+});
+
+// Optional root route to confirm server is running
+app.get('/', (req, res) => {
+  res.send('eBay webhook listener is live ✅');
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
+});
