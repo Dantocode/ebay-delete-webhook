@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+
 export default function handler(req, res) {
   const VERIFICATION_TOKEN = 'MySecureVerificationToken123456789';
 
@@ -8,7 +10,6 @@ export default function handler(req, res) {
       return res.status(400).json({ error: 'Missing challenge_code' });
     }
 
-    const crypto = require('crypto');
     const challengeResponse = crypto
       .createHmac('sha256', VERIFICATION_TOKEN)
       .update(challenge)
